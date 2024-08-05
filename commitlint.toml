@@ -1,0 +1,6 @@
+[type]
+min-length = 5
+max-length = 10
+
+[scope]
+enum = ["core", "ui", "test"]
