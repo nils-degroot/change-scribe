@@ -6,7 +6,7 @@ edition = "2021"
 description = "A tool that validates that commit messages follow the conventional commit format, and lints them according to a configuration file."
 license = "GPL-3.0"
 repository = "https://github.com/nils-degroot/change-scribe"
-categories = ["Command line utilities", "Development tools"]
+categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
 clap = { version = "4.5.13", features = ["derive"] }
