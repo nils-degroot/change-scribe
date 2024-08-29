@@ -18,10 +18,10 @@ jobs:
         include:
           - os: ubuntu-latest
             name: linux-x86_64
-            exe: jwl
+            exe: change-scribe
           - os: macos-latest
             name: macos-arm64
-            exe: jwl
+            exe: change-scribe
     steps:
 
     - uses: actions/checkout@v3
