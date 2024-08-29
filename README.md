@@ -5,6 +5,20 @@ conventional commit format, and lints them according to a configuration file.
 
 ## Installation
 
+Installation is done via `cargo`:
+
+```sh
+cargo install change-scribe
+```
+
+To build change-scribe from source, clone the repository and run:
+
+```sh
+cargo build --release
+```
+
+The binary will be located at `target/release/change-scribe`.
+
 ## Usage
 
 To use `change-scribe`:
