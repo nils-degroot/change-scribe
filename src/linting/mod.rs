@@ -44,7 +44,7 @@ enum LintErrorKind {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
-struct Conf {
+pub(crate) struct Conf {
     #[serde(rename = "type")]
     commit_type: TypeConf,
     #[serde(rename = "scope")]

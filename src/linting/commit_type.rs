@@ -18,7 +18,7 @@ impl Default for TypeConf {
         Self {
             types: vec!["*".to_string()],
             min_length: usize::MIN,
-            max_length: usize::MAX,
+            max_length: u32::MAX as usize,
         }
     }
 }

@@ -1,8 +1,9 @@
 use std::{collections::HashMap, path::PathBuf};
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use clap_stdin::MaybeStdin;
-use linting::lint;
+use linting::{lint, Conf};
+use miette::Context;
 
 mod linting;
 mod parsing;
@@ -11,19 +12,59 @@ mod parsing;
 /// them according to a configuration file.
 #[derive(Debug, Parser)]
 struct Args {
-    /// Message to lint
-    message: MaybeStdin<String>,
+    #[clap(subcommand)]
+    command: Command,
     #[clap(short, long)]
     /// Path to the configuration file. Overrides the default configuration.
     config: Option<PathBuf>,
 }
 
+#[derive(Debug, Subcommand)]
+enum Command {
+    /// Lint a commit message.
+    Lint {
+        /// Message to lint
+        message: MaybeStdin<String>,
+    },
+    /// Commands related to configuration.
+    Config {
+        #[clap(subcommand)]
+        command: ConfigCommand,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+enum ConfigCommand {
+    /// Print the default configuration to stdout.
+    Dump,
+}
+
 fn main() -> Result<(), miette::Report> {
     let args = Args::parse();
 
-    lint(Box::new(args.message.into_inner()).leak(), args.config)?;
+    match args.command {
+        Command::Lint { message } => {
+            lint(Box::new(message.into_inner()).leak(), args.config)?;
+        }
+        Command::Config { command } => match command {
+            ConfigCommand::Dump => {
+                let config = default_config()?;
+                println!("{}", config);
+            }
+        },
+    }
 
     Ok(())
+}
+
+fn default_config() -> miette::Result<String> {
+    let config = Conf::default();
+
+    let config = toml::to_string_pretty(&config)
+        .map_err(|e| miette::miette!(e))
+        .wrap_err("An error occurred while serializing the default configuration.")?;
+
+    Ok(config)
 }
 
 #[derive(Debug)]
