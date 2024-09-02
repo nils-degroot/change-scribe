@@ -24,20 +24,20 @@ The binary will be located at `target/release/change-scribe`.
 To use `change-scribe`:
 
 ```sh
-change-scribe "fix: resolved that bug"
+change-scribe lint "fix: resolved that bug"
 ```
 
 This validates the message according to the default configuration. The commit
 message could also be passed via stdin:
 
 ```sh
-echo "fix: resolved that bug" | change-scribe -
+echo "fix: resolved that bug" | change-scribe lint -
 ```
 
 To apply a custom config, use the `--config` flag:
 
 ```sh
-change-scribe --config path/to/config.toml "fix: resolved that bug"
+change-scribe lint --config path/to/config.toml "fix: resolved that bug"
 ```
 
 By default, `change-scribe` reads configuration from either
@@ -75,7 +75,7 @@ Ensures that the commit type is at most the entered length.
 **Default**:
 
 ```toml
-type.max-length = 18446744073709551615
+type.max-length = 4294967295
 ```
 
 ### Scope
