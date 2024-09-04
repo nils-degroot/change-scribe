@@ -78,6 +78,17 @@ Ensures that the commit type is at most the entered length.
 type.max-length = 4294967295
 ```
 
+#### `type.case`
+
+Ensures that the commit type is in the entered case. Possible values are
+`camel`, `kebab`, `pascal` and `snake`.
+
+**Default**:
+
+```toml
+type.case = "kebabtype.case = "kebab""
+```
+
 ### Scope
 
 #### `scope.enum`

@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{fmt::Display, path::PathBuf};
 
 use figment::{
     providers::{Format, Serialized, Toml},
@@ -32,15 +32,16 @@ struct LintError {
 #[derive(Debug, Diagnostic, Error)]
 enum LintErrorKind {
     #[error("Invalid commit type")]
-    InvalidCommitType,
+    TypeInvalid,
     #[error("The commit type is too short")]
-    CommitTypeTooShort,
+    TypeTooShort,
     #[error("The commit type is too long")]
-    CommitTypeTooLong,
+    TypeTooLong,
+
     #[error("Scope is required")]
     ScopeRequired,
     #[error("Invalid scope")]
-    InvalidScope,
+    ScopeInvalid,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -49,6 +50,36 @@ pub(crate) struct Conf {
     commit_type: TypeConf,
     #[serde(rename = "scope")]
     commit_scope: ScopeConf,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub(crate) enum Casing {
+    // camelCase
+    Camel,
+    // kebab-case
+    Kebab,
+    // PascalCase
+    Pascal,
+    // snake_case
+    Snake,
+}
+
+impl Display for Casing {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Casing::Camel => write!(f, "camelCase"),
+            Casing::Kebab => write!(f, "kebab-case"),
+            Casing::Pascal => write!(f, "PascalCase"),
+            Casing::Snake => write!(f, "snake_case"),
+        }
+    }
+}
+
+impl Default for Casing {
+    fn default() -> Self {
+        Self::Kebab
+    }
 }
 
 macro_rules! lint_fn {
@@ -92,21 +123,28 @@ lint_fn! {
         span: commit.type_span().into(),
         label: Some("At the commit type"),
         help: Some(format!("Valid types are: {:?}", config.commit_type.types).leak()),
-        kind: LintErrorKind::InvalidCommitType,
+        kind: LintErrorKind::TypeInvalid,
     },
     commit_type_too_short => |commit: &Commit, config: &Conf| LintError {
         input: commit.source.clone(),
         span: commit.type_span().into(),
         label: Some("At the commit type"),
         help: Some(format!("The commit type must be at least {} characters long", config.commit_type.min_length).leak()),
-        kind: LintErrorKind::CommitTypeTooShort,
+        kind: LintErrorKind::TypeTooShort,
     },
     commit_type_too_long => |commit: &Commit, config: &Conf| LintError {
         input: commit.source.clone(),
         span: commit.type_span().into(),
         label: Some("At the commit type"),
         help: Some(format!("The commit type must be at most {} characters long", config.commit_type.max_length).leak()),
-        kind: LintErrorKind::CommitTypeTooLong,
+        kind: LintErrorKind::TypeTooLong,
+    },
+    commit_type_case_invalid => |commit: &Commit, config: &Conf| LintError {
+        input: commit.source.clone(),
+        span: commit.type_span().into(),
+        label: Some("At the commit type"),
+        help: Some(format!("The commit type must be in `{}` case", config.commit_type.case).leak()),
+        kind: LintErrorKind::TypeInvalid,
     },
 
     // Scope
@@ -125,6 +163,6 @@ lint_fn! {
         span: commit.scope_span().into(),
         label: None,
         help: Some(format!("Valid scopes are: {:?}", config.commit_scope.scopes).leak()),
-        kind: LintErrorKind::InvalidScope,
+        kind: LintErrorKind::ScopeInvalid,
     }
 }

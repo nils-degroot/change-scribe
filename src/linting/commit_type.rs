@@ -1,8 +1,9 @@
+use cruet::Inflector;
 use serde::{Deserialize, Serialize};
 
 use crate::Commit;
 
-use super::Conf;
+use super::{Casing, Conf};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -11,6 +12,7 @@ pub(crate) struct TypeConf {
     pub types: Vec<String>,
     pub min_length: usize,
     pub max_length: usize,
+    pub case: Casing,
 }
 
 impl Default for TypeConf {
@@ -19,6 +21,7 @@ impl Default for TypeConf {
             types: vec!["*".to_string()],
             min_length: usize::MIN,
             max_length: u32::MAX as usize,
+            case: Casing::default(),
         }
     }
 }
@@ -31,6 +34,15 @@ pub(super) fn commit_type_invalid(commit: &Commit, config: &Conf) -> bool {
             .commit_type
             .types
             .contains(&commit.commit_type.to_string())
+    }
+}
+
+pub(super) fn commit_type_case_invalid(commit: &Commit, config: &Conf) -> bool {
+    match config.commit_type.case {
+        Casing::Camel => !commit.commit_type.is_camel_case(),
+        Casing::Kebab => !commit.commit_type.is_kebab_case(),
+        Casing::Pascal => !commit.commit_type.is_pascal_case(),
+        Casing::Snake => !commit.commit_type.is_snake_case(),
     }
 }
 
@@ -130,5 +142,21 @@ mod tests {
         config.commit_type.max_length = 4;
 
         assert!(!commit_type_too_long(&commit, &config));
+    }
+
+    #[test]
+    fn test_case_invalid() {
+        let mut commit = sample_commit();
+        commit.commit_type = "snake_case";
+
+        assert!(commit_type_case_invalid(&commit, &Conf::default()));
+    }
+
+    #[test]
+    fn test_case_valid() {
+        let mut commit = sample_commit();
+        commit.commit_type = "kebab-case";
+
+        assert!(!commit_type_case_invalid(&commit, &Conf::default()));
     }
 }

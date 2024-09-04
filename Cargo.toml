@@ -17,3 +17,4 @@ serde = { version = "1.0.207", features = ["derive"] }
 thiserror = "1.0.63"
 figment = { version = "0.10.19", features = ["toml"] }
 toml = "0.8.19"
+cruet = "0.14.0"
