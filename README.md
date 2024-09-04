@@ -111,3 +111,35 @@ Ensures that a commit has a scope.
 ```toml
 scope.required = false
 ```
+
+#### `scope.min-length`
+
+Ensures that the commit scope is at least the entered length.
+
+**Default**:
+
+```toml
+scope.min-length = 0
+```
+
+#### `scope.max-length`
+
+Ensures that the commit scope is at most the entered length.
+
+**Default**:
+
+```toml
+scope.max-length = 4294967295
+```
+
+#### `scope.case`
+
+Ensures that the commit scope is in the entered case. Possible values are
+`camel`, `kebab`, `pascal` and `snake`.
+
+**Default**:
+
+```toml
+type.case = "kebab"
+```
+

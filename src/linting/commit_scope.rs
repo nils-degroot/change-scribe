@@ -1,14 +1,19 @@
+use cruet::Inflector;
 use serde::{Deserialize, Serialize};
 
 use crate::Commit;
 
-use super::Conf;
+use super::{Casing, Conf};
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub(crate) struct ScopeConf {
     pub required: bool,
     #[serde(rename = "enum")]
     pub scopes: Vec<String>,
+    pub min_length: usize,
+    pub max_length: usize,
+    pub case: Casing,
 }
 
 impl Default for ScopeConf {
@@ -16,6 +21,9 @@ impl Default for ScopeConf {
         Self {
             required: false,
             scopes: vec!["*".to_string()],
+            min_length: usize::MIN,
+            max_length: u32::MAX as usize,
+            case: Casing::default(),
         }
     }
 }
@@ -38,6 +46,29 @@ pub(super) fn commit_scope_invalid(commit: &Commit, config: &Conf) -> bool {
             .scope
             .iter()
             .any(|scope| config.commit_scope.scopes.contains(&scope.to_string()))
+}
+
+pub(super) fn commit_scope_too_short(commit: &Commit, config: &Conf) -> bool {
+    commit
+        .scope
+        .iter()
+        .any(|scope| scope.len() <= config.commit_scope.min_length)
+}
+
+pub(super) fn commit_scope_too_long(commit: &Commit, config: &Conf) -> bool {
+    commit
+        .scope
+        .iter()
+        .any(|scope| scope.len() >= config.commit_scope.max_length)
+}
+
+pub(super) fn commit_scope_case_invalid(commit: &Commit, config: &Conf) -> bool {
+    match config.commit_scope.case {
+        Casing::Camel => commit.scope.iter().any(|scope| !scope.is_camel_case()),
+        Casing::Kebab => commit.scope.iter().any(|scope| !scope.is_kebab_case()),
+        Casing::Pascal => commit.scope.iter().any(|scope| !scope.is_pascal_case()),
+        Casing::Snake => commit.scope.iter().any(|scope| !scope.is_snake_case()),
+    }
 }
 
 #[cfg(test)]
@@ -109,5 +140,54 @@ mod tests {
         config.commit_scope.scopes = vec!["*".to_string()];
 
         assert!(!commit_scope_invalid(&commit, &config));
+    }
+
+    #[test]
+    fn test_too_short() {
+        let mut commit = sample_commit();
+        commit.scope = vec!["fix"];
+
+        let mut config = Conf::default();
+        config.commit_scope.min_length = 4;
+
+        assert!(commit_scope_too_short(&commit, &config));
+    }
+
+    #[test]
+    fn test_too_long() {
+        let mut commit = sample_commit();
+        commit.scope = vec!["fix"];
+
+        let mut config = Conf::default();
+        config.commit_scope.max_length = 2;
+
+        assert!(commit_scope_too_long(&commit, &config));
+    }
+
+    #[test]
+    fn test_long_enough() {
+        let mut commit = sample_commit();
+        commit.scope = vec!["fix"];
+
+        let mut config = Conf::default();
+        config.commit_scope.max_length = 4;
+
+        assert!(!commit_scope_too_long(&commit, &config));
+    }
+
+    #[test]
+    fn test_case_invalid() {
+        let mut commit = sample_commit();
+        commit.scope = vec!["snake_case"];
+
+        assert!(commit_scope_case_invalid(&commit, &Conf::default()));
+    }
+
+    #[test]
+    fn test_case_valid() {
+        let mut commit = sample_commit();
+        commit.scope = vec!["kebab-case"];
+
+        assert!(!commit_scope_case_invalid(&commit, &Conf::default()));
     }
 }
