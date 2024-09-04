@@ -37,11 +37,19 @@ enum LintErrorKind {
     TypeTooShort,
     #[error("The commit type is too long")]
     TypeTooLong,
+    #[error("Invalid commit type case")]
+    TypeCaseInvalid,
 
     #[error("Scope is required")]
     ScopeRequired,
     #[error("Invalid scope")]
     ScopeInvalid,
+    #[error("The scope is too short")]
+    ScopeTooShort,
+    #[error("The scope is too long")]
+    ScopeTooLong,
+    #[error("Invalid commit scope case")]
+    ScopeCaseInvalid,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -144,7 +152,7 @@ lint_fn! {
         span: commit.type_span().into(),
         label: Some("At the commit type"),
         help: Some(format!("The commit type must be in `{}` case", config.commit_type.case).leak()),
-        kind: LintErrorKind::TypeInvalid,
+        kind: LintErrorKind::TypeCaseInvalid,
     },
 
     // Scope
@@ -164,5 +172,26 @@ lint_fn! {
         label: None,
         help: Some(format!("Valid scopes are: {:?}", config.commit_scope.scopes).leak()),
         kind: LintErrorKind::ScopeInvalid,
+    },
+    commit_scope_too_short => |commit: &Commit, config: &Conf| LintError {
+        input: commit.source.clone(),
+        span: commit.scope_span().into(),
+        label: None,
+        help: Some(format!("The scope must be at least {} characters long", config.commit_scope.min_length).leak()),
+        kind: LintErrorKind::ScopeTooShort,
+    },
+    commit_scope_too_long => |commit: &Commit, config: &Conf| LintError {
+        input: commit.source.clone(),
+        span: commit.scope_span().into(),
+        label: None,
+        help: Some(format!("The scope must be at most {} characters long", config.commit_scope.max_length).leak()),
+        kind: LintErrorKind::ScopeTooLong,
+    },
+    commit_scope_case_invalid => |commit: &Commit, config: &Conf| LintError {
+        input: commit.source.clone(),
+        span: commit.scope_span().into(),
+        label: None,
+        help: Some(format!("The scope must be in `{}` case", config.commit_scope.case).leak()),
+        kind: LintErrorKind::ScopeCaseInvalid,
     }
 }
